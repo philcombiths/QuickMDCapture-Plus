@@ -118,7 +118,7 @@ fun SettingsScreen(
         }
     }
 
-    // Общие настройки
+    // General Settings Section
     Text(
         text = stringResource(id = R.string.general_settings_title),
         fontWeight = FontWeight.Bold,
@@ -167,7 +167,7 @@ fun SettingsScreen(
                             containerColor = Color.Transparent
                         )
                     )
-                    // Устанавливаем фон для ExposedDropdownMenu
+                    // Setting the background for ExposedDropdownMenu
                     ExposedDropdownMenu(
                         expanded = expandedTheme,
                         onDismissRequest = { expandedTheme = false },
@@ -228,6 +228,7 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             ) {
+                // Notifications Section
                 Text(
                     stringResource(id = R.string.add_notes_via_notification),
                     color = textColor,
@@ -284,7 +285,7 @@ fun SettingsScreen(
                                 containerColor = Color.Transparent
                             )
                         )
-                        // Устанавливаем фон для ExposedDropdownMenu
+                        // Setting the background for ExposedDropdownMenu
                         ExposedDropdownMenu(
                             expanded = expandedNotificationStyle,
                             onDismissRequest = { expandedNotificationStyle = false },
@@ -555,14 +556,23 @@ fun SettingsScreen(
             )
 
             // File Format Section
-            Text(
-                text = stringResource(id = R.string.file_format_section_title),
-                fontWeight = FontWeight.Bold,
-                color = textColor,
-                modifier = Modifier.fillMaxWidth(),
-                fontSize = 18.sp,
-                textAlign = TextAlign.Center
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(id = R.string.file_format_section_title),
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    // modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.weight(1f),
+                    fontSize = 18.sp,
+                    textAlign = TextAlign.Center
+                )
+                IconButton(onClick = { showSaveSettingsInfoDialog = true }) {
+                    Icon(Icons.Filled.Info, contentDescription = "Info", tint = textColor)
+                }
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
             TextField(
