@@ -46,7 +46,8 @@ class NoteDialog(
                     note = text,
                     onSuccess = {
                         Toast.makeText(context, R.string.note_saved, Toast.LENGTH_SHORT).show()
-                        dismiss()
+                        // Allow user to see the captured text briefly before closing
+                        handler.postDelayed({ dismiss() }, 2000)
                     },
                     onError = { error ->
                         Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
