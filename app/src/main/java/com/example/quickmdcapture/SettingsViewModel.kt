@@ -225,8 +225,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private fun loadTemplates(): List<SaveTemplate> {
         val templatesJson = sharedPreferences.getString("TEMPLATES", null)
         return if (templatesJson != null) {
-            val type = object : TypeToken<List<SaveTemplate>>() {}.type
-            gson.fromJson(templatesJson, type)
+            try {
+                val type = object : TypeToken<List<SaveTemplate>>() {}.type
+                gson.fromJson(templatesJson, type) ?: emptyList()
+            } catch (e: Exception) {
+                // If JSON parsing fails, return empty list
+                emptyList()
+            }
         } else {
             emptyList()
         }

@@ -139,7 +139,7 @@ class NoteSaver(
                 settingsViewModel.clearPreviousText()
                 onSuccess()
             } catch (e: Exception) {
-                onError(context.getString(R.string.note_error))
+                onError("${context.getString(R.string.note_error)}: ${e.localizedMessage ?: e.message ?: "Unknown error"}")
             }
         } else {
             onError(context.getString(R.string.note_error))

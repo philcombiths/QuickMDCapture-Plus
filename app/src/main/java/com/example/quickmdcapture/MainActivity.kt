@@ -291,11 +291,15 @@ fun MainScreen(
                 override fun onResponse(call: Call<Release?>, response: Response<Release?>) {
                     if (response.isSuccessful) {
                         latestRelease = response.body()
+                    } else {
+                        // Handle unsuccessful response
+                        Toast.makeText(context, "Failed to fetch latest release: ${response.message()}", Toast.LENGTH_SHORT).show()
                     }
                 }
 
                 override fun onFailure(call: Call<Release?>, t: Throwable) {
-                    // Handle error
+                    // Handle network error
+                    Toast.makeText(context, "Network error: ${t.localizedMessage ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
                 }
             })
         }

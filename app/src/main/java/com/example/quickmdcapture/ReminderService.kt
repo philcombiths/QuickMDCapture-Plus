@@ -123,22 +123,27 @@ class ReminderService : Service() {
     }
 
     private fun isTimeInRange(timeMillis: Long): Boolean {
-        val calendar = Calendar.getInstance().apply { timeInMillis = timeMillis }
-        val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
-        val currentMinute = calendar.get(Calendar.MINUTE)
-        val currentTimeInMinutes = currentHour * 60 + currentMinute
+        return try {
+            val calendar = Calendar.getInstance().apply { timeInMillis = timeMillis }
+            val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
+            val currentMinute = calendar.get(Calendar.MINUTE)
+            val currentTimeInMinutes = currentHour * 60 + currentMinute
 
-        val startTime = settingsViewModel.reminderStartTime.value.split(":")
-        val endTime = settingsViewModel.reminderEndTime.value.split(":")
-        
-        val startTimeInMinutes = startTime[0].toInt() * 60 + startTime[1].toInt()
-        val endTimeInMinutes = endTime[0].toInt() * 60 + endTime[1].toInt()
+            val startTime = settingsViewModel.reminderStartTime.value.split(":")
+            val endTime = settingsViewModel.reminderEndTime.value.split(":")
 
-        return if (endTimeInMinutes < startTimeInMinutes) {
-            // Handle overnight range (e.g., 23:00 to 07:00)
-            currentTimeInMinutes >= startTimeInMinutes || currentTimeInMinutes <= endTimeInMinutes
-        } else {
-            currentTimeInMinutes in startTimeInMinutes..endTimeInMinutes
+            val startTimeInMinutes = startTime[0].toInt() * 60 + startTime[1].toInt()
+            val endTimeInMinutes = endTime[0].toInt() * 60 + endTime[1].toInt()
+
+            if (endTimeInMinutes < startTimeInMinutes) {
+                // Handle overnight range (e.g., 23:00 to 07:00)
+                currentTimeInMinutes >= startTimeInMinutes || currentTimeInMinutes <= endTimeInMinutes
+            } else {
+                currentTimeInMinutes in startTimeInMinutes..endTimeInMinutes
+            }
+        } catch (e: Exception) {
+            // If time parsing fails, default to allowing reminders
+            true
         }
     }
 
@@ -233,34 +238,38 @@ class ReminderService : Service() {
     }
 
     private fun showReminderNotification() {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        
-        val intent = Intent(this, TransparentActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_NO_ANIMATION or
-                    Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
-            putExtra("FROM_REMINDER", true)
+        try {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            val intent = Intent(this, TransparentActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_NO_ANIMATION or
+                        Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+                putExtra("FROM_REMINDER", true)
+            }
+
+            val pendingIntent = PendingIntent.getActivity(
+                this,
+                REMINDER_NOTIFICATION_ID,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
+            val notification = NotificationCompat.Builder(this, REMINDER_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText(settingsViewModel.reminderText.value)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .build()
+
+            notificationManager.notify(REMINDER_NOTIFICATION_ID, notification)
+        } catch (e: Exception) {
+            // Log error or handle notification failure
         }
-
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            REMINDER_NOTIFICATION_ID,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(this, REMINDER_CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(settingsViewModel.reminderText.value)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setCategory(NotificationCompat.CATEGORY_REMINDER)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setAutoCancel(true)
-            .setContentIntent(pendingIntent)
-            .build()
-            
-        notificationManager.notify(REMINDER_NOTIFICATION_ID, notification)
     }
 } 

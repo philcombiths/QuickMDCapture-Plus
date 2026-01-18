@@ -42,7 +42,18 @@ class SpeechRecognitionManager(
                 override fun onError(error: Int) {
                     isListening = false
                     onListeningStateChanged(false)
-                    Toast.makeText(context, "Speech recognition error: $error", Toast.LENGTH_SHORT).show()
+                    val errorMessage = when (error) {
+                        SpeechRecognizer.ERROR_NO_MATCH -> "No speech detected"
+                        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Speech timeout"
+                        SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
+                        SpeechRecognizer.ERROR_CLIENT -> "Client error"
+                        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
+                        SpeechRecognizer.ERROR_NETWORK -> "Network error"
+                        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
+                        SpeechRecognizer.ERROR_SERVER -> "Server error"
+                        else -> "Speech recognition error: $error"
+                    }
+                    Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onResults(results: Bundle?) {
