@@ -1,8 +1,7 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.pm20.util.archivesName
-
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
@@ -15,7 +14,6 @@ android {
         targetSdk = 33
         versionCode = 8
         versionName = "1.3.0"
-        archivesName = "QuickMDCapture_${versionName}"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -38,9 +36,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
     }
     packaging {
         resources {

@@ -61,13 +61,7 @@
     <string name="timestamp_template_hint">Шаблон временной метки (заключите шаблоны форматирования даты и времени в двойные фигурные скобки: {{ }})</string>
     <string name="microphone_permission_denied">Для использования голосового ввода необходимо разрешить доступ к микрофону</string>
     <string name="current_version">Текущая версия: %1$s</string>
-    <string name="latest_version">Последняя версия на GitHub: %1$s</string>
-    <string name="date_format_hint">Формат даты (заключите шаблоны форматирования даты и времени в двойные фигурные скобки: {{ }})</string>
-    <string name="restore_text">Восстановить текст</string>
-    <string name="general_settings_title">Общие настройки</string>
     <!-- Formatting presets -->
-    <string name="formatting_section_title">Форматирование</string>
-    <string name="prepend_preset_label">Префикс (предустановки)</string>
     <string name="prepend_preset_none">Нет</string>
     <string name="prepend_preset_list_dash">Элемент списка (-)</string>
     <string name="prepend_preset_list_star">Элемент списка (*)</string>
@@ -119,4 +113,58 @@
     <string name="file_format_section_title">Формат имени файла</string>
     <string name="text_format_section_title">Формат сохраняемого текста</string>
     <string name="save_location_section_title">Место сохранения</string>
+    <string name="speech_recognition_not_available">Распознавание речи недоступно</string>
+    <string name="latest_version">Последняя версия на GitHub: %1$s</string>
+    <string name="date_format_hint">Формат даты (заключите шаблоны форматирования даты и времени в двойные фигурные скобки: {{ }})</string>
+    <string name="restore_text">Восстановить текст</string>
+    <string name="general_settings_title">Общие настройки</string>
+    <!-- Formatting presets -->
+    <string name="formatting_section_title">Форматирование</string>
+    <string name="prepend_preset_label">Префикс</string>
+    <string name="prepend_preset_none">Нет</string>
+    <string name="prepend_preset_list_dash">Элемент списка (-)</string>
+    <string name="prepend_preset_list_star">Элемент списка (*)</string>
+    <string name="prepend_preset_numbered">Нумерованный</string>
+    <string name="prepend_preset_checklist">Элемент чек-листа (- [ ])</string>
+    <string name="prepend_preset_custom">Пользовательский…</string>
+    <string name="custom_prepend_label">Пользовательский префикс</string>
+    <string name="custom_prepend_hint">Текст для размещения перед каждой строкой захваченной заметки</string>
+
+    <string name="append_preset_label">Суффикс</string>
+    <string name="append_preset_none">Нет</string>
+    <string name="append_preset_date">Дата</string>
+    <string name="append_preset_date_time">Дата и время</string>
+    <string name="append_preset_custom">Пользовательский…</string>
+    <string name="custom_append_label">Пользовательский суффикс</string>
+    <string name="custom_append_hint">Текст для размещения после захваченной заметки</string>
+    <string name="theme_setting">Тема</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_system">Системная</string>
+    <string name="templates_title">Шаблоны сохранения</string>
+    <string name="add_template">Добавить шаблон</string>
+    <string name="rename_template">Переименовать шаблон</string>
+    <string name="delete_template">Удалить шаблон</string>
+    <string name="add_template_dialog_title">Добавить новый шаблон</string>
+    <string name="rename_template_dialog_title">Переименовать шаблон</string>
+    <string name="delete_template_dialog_title">Удалить шаблон</string>
+    <string name="delete_template_dialog_message">Вы уверены, что хотите удалить шаблон \"%1$s\"?</string>
+    <string name="template_name_hint">Название шаблона</string>
+    <string name="add">Добавить</string>
+    <string name="rename">Переименовать</string>
+    <string name="delete">Удалить</string>
+    <string name="set_as_default">Установить по умолчанию</string>
+    <string name="default_template">Шаблон по умолчанию</string>
+    <string name="no_default_template">Шаблон по умолчанию не найден. Пожалуйста, установите шаблон по умолчанию в настройках.</string>
+
+    <!-- Reminder settings -->
+    <string name="reminder_settings_title">Регулярные напоминания о заметках</string>
+    <string name="enable_reminders">Включить напоминания</string>
+    <string name="reminder_text">Текст напоминания</string>
+    <string name="reminder_text_hint">Текст для отображения в уведомлении напоминания</string>
+    <string name="reminder_interval">Интервал напоминаний (минуты)</string>
+    <string name="reminder_interval_hint">Как часто показывать напоминания (в минутах)</string>
+    <string name="reminder_start_time">Время начала</string>
+    <string name="reminder_end_time">Время окончания</string>
+    <string name="reminder_service_running">Служба напоминаний запущена</string>
 </resources>

@@ -354,7 +354,7 @@ class NoteDialog(
 
     fun startSpeechRecognition() {
         if (!SpeechRecognizer.isRecognitionAvailable(context)) {
-            Toast.makeText(context, "Speech recognition not available", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.speech_recognition_not_available), Toast.LENGTH_SHORT).show()
             return
         }
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
