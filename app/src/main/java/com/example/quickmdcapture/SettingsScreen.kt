@@ -65,6 +65,7 @@ fun SettingsScreen(
     val theme by settingsViewModel.theme.collectAsState()
     val isNoteTextInFilenameEnabled by settingsViewModel.isNoteTextInFilenameEnabled.collectAsState()
     val noteTextInFilenameLength by settingsViewModel.noteTextInFilenameLength.collectAsState()
+    val insertAfterMarker by settingsViewModel.insertAfterMarker.collectAsState("")
 
     // Reminder settings state
     val isReminderEnabled by settingsViewModel.isReminderEnabled.collectAsState()
@@ -641,6 +642,32 @@ fun SettingsScreen(
                     }
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = stringResource(id = R.string.insert_after_marker),
+                color = textColor
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            var insertAfterMarkerInput by remember { mutableStateOf(insertAfterMarker) }
+            TextField(
+                value = insertAfterMarkerInput,
+                onValueChange = { value ->
+                    insertAfterMarkerInput = value
+                    settingsViewModel.updateInsertAfterMarker(value)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = textColor,
+                    containerColor = Color.Transparent
+                ),
+                placeholder = {
+                    Text(
+                        text = "# Day Planner",
+                        color = textColor.copy(alpha = 0.6f)
+                    )
+                }
+            )
 
             Divider(
                 modifier = Modifier

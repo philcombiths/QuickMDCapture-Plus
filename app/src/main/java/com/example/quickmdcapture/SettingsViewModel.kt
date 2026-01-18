@@ -101,6 +101,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     )
     val noteTextInFilenameLength: StateFlow<Int> = _noteTextInFilenameLength
 
+    private val _insertAfterMarker = MutableStateFlow(
+        sharedPreferences.getString("INSERT_AFTER_MARKER", "") ?: ""
+    )
+    val insertAfterMarker: StateFlow<String> = _insertAfterMarker
+
     // Reminder settings
     private val _isReminderEnabled = MutableStateFlow(
         sharedPreferences.getBoolean("REMINDER_ENABLED", false)
@@ -233,6 +238,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             _dateCreatedTemplate.value = template.dateCreatedTemplate
             _isNoteTextInFilenameEnabled.value = template.isNoteTextInFilenameEnabled
             _noteTextInFilenameLength.value = template.noteTextInFilenameLength
+            _insertAfterMarker.value = template.insertAfterMarker
         }
     }
 
@@ -498,11 +504,18 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         updateSelectedTemplate()
     }
 
+    fun updateInsertAfterMarker(marker: String) {
+        _insertAfterMarker.value = marker
+        sharedPreferences.edit().putString("INSERT_AFTER_MARKER", marker).apply()
+        updateSelectedTemplate()
+    }
+
     private fun updateSelectedTemplate() {
         selectedTemplate?.let { template ->
             updateTemplate(template.copy(
                 isNoteTextInFilenameEnabled = _isNoteTextInFilenameEnabled.value,
-                noteTextInFilenameLength = _noteTextInFilenameLength.value
+                noteTextInFilenameLength = _noteTextInFilenameLength.value,
+                insertAfterMarker = _insertAfterMarker.value
             ))
         }
     }

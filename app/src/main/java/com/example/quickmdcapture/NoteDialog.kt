@@ -451,7 +451,7 @@ class NoteDialog(
 
                             val updatedText = insertAfterMarkerOrAppend(
                                 originalText = existingText,
-                                marker = "# Day Planner",
+                                marker = settingsViewModel.insertAfterMarker.value,
                                 newContent = content.toString()
                             )
 

@@ -56,6 +56,8 @@
     <string name="use_note_text_in_filename">Использовать начало текста заметки в имени файла</string>
     <string name="note_text_in_filename_length">Длина текста заметки в имени файла</string>
     <string name="note_text_in_filename_length_hint">Количество символов от начала текста заметки для имени файла</string>
+    <string name="insert_after_marker">Вставить после маркера</string>
+    <string name="insert_after_marker_hint">Текст маркера для определения точки вставки в существующих файлах (оставьте пусто, чтобы добавить в конец)</string>
     <string name="timestamp_template_hint">Шаблон временной метки (заключите шаблоны форматирования даты и времени в двойные фигурные скобки: {{ }})</string>
     <string name="microphone_permission_denied">Для использования голосового ввода необходимо разрешить доступ к микрофону</string>
     <string name="current_version">Текущая версия: %1$s</string>

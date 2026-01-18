@@ -14,5 +14,6 @@ data class SaveTemplate(
     val propertyName: String = "created",
     val dateCreatedTemplate: String = "{{yyyy.MM.dd}}T{{HH:mm:ssZ}}",
     val isNoteTextInFilenameEnabled: Boolean = false,
-    val noteTextInFilenameLength: Int = 30
+    val noteTextInFilenameLength: Int = 30,
+    val insertAfterMarker: String = ""
 ) 
