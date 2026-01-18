@@ -286,6 +286,8 @@ class NoteDialog(
                 isListening = false
                 btnSpeech.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_mic))
                 lastPartialTextLength = 0
+                // Log the error for debugging
+                android.util.Log.e("NoteDialog", "Speech recognition error: $error")
             }
 
             override fun onResults(results: Bundle?) {
@@ -329,6 +331,16 @@ class NoteDialog(
         window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        if (isListening) {
+            stopSpeechRecognition()
+        }
+        if (::speechRecognizer.isInitialized) {
+            speechRecognizer.destroy()
+        }
+    }
+
     private fun updateNoteText(text: String) {
         val currentText = etNote.text.toString()
         val newText = if (lastPartialTextLength <= currentText.length) {
@@ -341,6 +353,10 @@ class NoteDialog(
     }
 
     fun startSpeechRecognition() {
+        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+            Toast.makeText(context, "Speech recognition not available", Toast.LENGTH_SHORT).show()
+            return
+        }
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
         intent.putExtra(
             RecognizerIntent.EXTRA_LANGUAGE_MODEL,
