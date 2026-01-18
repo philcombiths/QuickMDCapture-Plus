@@ -178,56 +178,8 @@ class ShareHandlerActivity : AppCompatActivity() {
 
         val existingFile = folder.findFile(fileName)
         if (existingFile != null) {
-            contentResolver.openOutputStream(existingFile.uri, "wa")?.use { outputStream ->
-                // Apply prepend preset formatting
-                val indent = "\t".repeat(listItemIndentLevel)
-                val prependPreset = settingsViewModel.prependPreset.value
-                val customPrepend = settingsViewModel.customPrepend.value
-                val fallbackListItems = isListItemsEnabled && prependPreset == "none" && customPrepend.isBlank()
-
-                var textToWrite = when (prependPreset) {
-                    "list_dash" -> text.split("\n").joinToString("\n") { "$indent- $it" }
-                    "list_star" -> text.split("\n").joinToString("\n") { "$indent* $it" }
-                    "numbered" -> text.split("\n").mapIndexed { idx, line -> "$indent${idx + 1}. $line" }.joinToString("\n")
-                    "checklist" -> text.split("\n").joinToString("\n") { "$indent- [ ] $it" }
-                    "custom" -> text.split("\n").joinToString("\n") { indent + customPrepend + it }
-                    else -> if (fallbackListItems) {
-                        text.split("\n").joinToString("\n") { "$indent- $it" }
-                    } else {
-                        text
-                    }
-                }
-
-                if (isTimestampEnabled) {
-                    textToWrite = "${getFormattedTimestamp(timestampTemplate)}\n$textToWrite"
-                }
-
-                // Append preset handling
-                val appendPreset = settingsViewModel.appendPreset.value
-                val customAppend = settingsViewModel.customAppend.value
-                val appendResolved = when (appendPreset) {
-                    "date" -> {
-                        val dateStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-                        " $dateStr"
-                    }
-                    "date_time" -> {
-                        val dtStr = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
-                        " $dtStr"
-                    }
-                    "custom" -> customAppend
-                    else -> ""
-                }
-                if (appendResolved.isNotEmpty()) {
-                    textToWrite += appendResolved
-                }
-
-                outputStream.write("\n$textToWrite".toByteArray())
-            }
-            Toast.makeText(this, getString(R.string.note_appended), Toast.LENGTH_SHORT).show()
-        } else {
-            val newFile = folder.createFile("text/markdown", fileName)
-            if (newFile != null) {
-                contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
+            try {
+                contentResolver.openOutputStream(existingFile.uri, "wa")?.use { outputStream ->
                     // Apply prepend preset formatting
                     val indent = "\t".repeat(listItemIndentLevel)
                     val prependPreset = settingsViewModel.prependPreset.value
@@ -250,9 +202,6 @@ class ShareHandlerActivity : AppCompatActivity() {
                     if (isTimestampEnabled) {
                         textToWrite = "${getFormattedTimestamp(timestampTemplate)}\n$textToWrite"
                     }
-                    if (isDateCreatedEnabled) {
-                        textToWrite = "---\n$propertyName: $fullTimeStamp\n---\n$textToWrite"
-                    }
 
                     // Append preset handling
                     val appendPreset = settingsViewModel.appendPreset.value
@@ -273,9 +222,68 @@ class ShareHandlerActivity : AppCompatActivity() {
                         textToWrite += appendResolved
                     }
 
-                    outputStream.write(textToWrite.toByteArray())
+                    outputStream.write("\n$textToWrite".toByteArray())
                 }
-                Toast.makeText(this, getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.note_appended), Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this, "${getString(R.string.note_error)}: ${e.localizedMessage ?: e.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            val newFile = folder.createFile("text/markdown", fileName)
+            if (newFile != null) {
+                try {
+                    contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
+                        // Apply prepend preset formatting
+                        val indent = "\t".repeat(listItemIndentLevel)
+                        val prependPreset = settingsViewModel.prependPreset.value
+                        val customPrepend = settingsViewModel.customPrepend.value
+                        val fallbackListItems = isListItemsEnabled && prependPreset == "none" && customPrepend.isBlank()
+
+                        var textToWrite = when (prependPreset) {
+                            "list_dash" -> text.split("\n").joinToString("\n") { "$indent- $it" }
+                            "list_star" -> text.split("\n").joinToString("\n") { "$indent* $it" }
+                            "numbered" -> text.split("\n").mapIndexed { idx, line -> "$indent${idx + 1}. $line" }.joinToString("\n")
+                            "checklist" -> text.split("\n").joinToString("\n") { "$indent- [ ] $it" }
+                            "custom" -> text.split("\n").joinToString("\n") { indent + customPrepend + it }
+                            else -> if (fallbackListItems) {
+                                text.split("\n").joinToString("\n") { "$indent- $it" }
+                            } else {
+                                text
+                            }
+                        }
+
+                        if (isTimestampEnabled) {
+                            textToWrite = "${getFormattedTimestamp(timestampTemplate)}\n$textToWrite"
+                        }
+                        if (isDateCreatedEnabled) {
+                            textToWrite = "---\n$propertyName: $fullTimeStamp\n---\n$textToWrite"
+                        }
+
+                        // Append preset handling
+                        val appendPreset = settingsViewModel.appendPreset.value
+                        val customAppend = settingsViewModel.customAppend.value
+                        val appendResolved = when (appendPreset) {
+                            "date" -> {
+                                val dateStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                                " $dateStr"
+                            }
+                            "date_time" -> {
+                                val dtStr = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+                                " $dtStr"
+                            }
+                            "custom" -> customAppend
+                            else -> ""
+                        }
+                        if (appendResolved.isNotEmpty()) {
+                            textToWrite += appendResolved
+                        }
+
+                        outputStream.write(textToWrite.toByteArray())
+                    }
+                    Toast.makeText(this, getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(this, "${getString(R.string.note_error)}: ${e.localizedMessage ?: e.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
+                }
             } else {
                 Toast.makeText(this, getString(R.string.note_error), Toast.LENGTH_SHORT).show()
             }
@@ -295,7 +303,7 @@ class ShareHandlerActivity : AppCompatActivity() {
                 }
                 Toast.makeText(this, getString(R.string.file_saved), Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
-                Toast.makeText(this, getString(R.string.note_error), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "${getString(R.string.note_error)}: ${e.localizedMessage ?: e.message ?: "Unknown error"}", Toast.LENGTH_SHORT).show()
             }
         } else {
             Toast.makeText(this, getString(R.string.note_error), Toast.LENGTH_SHORT).show()
@@ -303,50 +311,60 @@ class ShareHandlerActivity : AppCompatActivity() {
     }
 
     private fun getFormattedTimestamp(template: String): String {
-        val sb = StringBuilder()
-        var i = 0
-        while (i < template.length) {
-            if (template[i] == '{' && i < template.length - 1 && template[i + 1] == '{') {
-                i += 2
-                val endIndex = template.indexOf("}}", i)
-                if (endIndex != -1) {
-                    val datePart = template.substring(i, endIndex)
-                    val formattedDate = SimpleDateFormat(datePart, Locale.getDefault()).format(Date())
-                    sb.append(formattedDate)
-                    i = endIndex + 2
+        return try {
+            val sb = StringBuilder()
+            var i = 0
+            while (i < template.length) {
+                if (template[i] == '{' && i < template.length - 1 && template[i + 1] == '{') {
+                    i += 2
+                    val endIndex = template.indexOf("}}", i)
+                    if (endIndex != -1) {
+                        val datePart = template.substring(i, endIndex)
+                        val formattedDate = SimpleDateFormat(datePart, Locale.getDefault()).format(Date())
+                        sb.append(formattedDate)
+                        i = endIndex + 2
+                    } else {
+                        sb.append(template[i])
+                        i++
+                    }
                 } else {
                     sb.append(template[i])
                     i++
                 }
-            } else {
-                sb.append(template[i])
-                i++
             }
+            sb.toString()
+        } catch (e: Exception) {
+            // Return current timestamp as fallback
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         }
-        return sb.toString()
     }
 
     private fun getFileNameWithDate(template: String): String {
-        val sb = StringBuilder()
-        var i = 0
-        while (i < template.length) {
-            if (template[i] == '{' && i < template.length - 1 && template[i + 1] == '{') {
-                i += 2
-                val endIndex = template.indexOf("}}", i)
-                if (endIndex != -1) {
-                    val datePart = template.substring(i, endIndex)
-                    val formattedDate = SimpleDateFormat(datePart, Locale.getDefault()).format(Date())
-                    sb.append(formattedDate)
-                    i = endIndex + 2
+        return try {
+            val sb = StringBuilder()
+            var i = 0
+            while (i < template.length) {
+                if (template[i] == '{' && i < template.length - 1 && template[i + 1] == '{') {
+                    i += 2
+                    val endIndex = template.indexOf("}}", i)
+                    if (endIndex != -1) {
+                        val datePart = template.substring(i, endIndex)
+                        val formattedDate = SimpleDateFormat(datePart, Locale.getDefault()).format(Date())
+                        sb.append(formattedDate)
+                        i = endIndex + 2
+                    } else {
+                        sb.append(template[i])
+                        i++
+                    }
                 } else {
                     sb.append(template[i])
                     i++
                 }
-            } else {
-                sb.append(template[i])
-                i++
             }
+            sb.toString()
+        } catch (e: Exception) {
+            // Return current date as fallback
+            SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
         }
-        return sb.toString()
     }
 }
