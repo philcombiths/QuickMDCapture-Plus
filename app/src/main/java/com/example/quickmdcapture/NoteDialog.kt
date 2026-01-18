@@ -406,14 +406,23 @@ class NoteDialog(
             try {
                 val content = StringBuilder()
 
-                // Форматируем текст заметки
-                val formattedNote = if (settingsViewModel.isListItemsEnabled.value) {
-                    val indent = "\t".repeat(settingsViewModel.listItemIndentLevel.value)
-                    note.lines().joinToString("\n") { line ->
-                        "$indent- $line"
+                // Форматируем текст заметки с учетом пресетов
+                val indent = "\t".repeat(settingsViewModel.listItemIndentLevel.value)
+                val prependPreset = settingsViewModel.prependPreset.value
+                val customPrepend = settingsViewModel.customPrepend.value
+                val fallbackListItems = settingsViewModel.isListItemsEnabled.value && prependPreset == "none" && customPrepend.isBlank()
+
+                val formattedNote = when (prependPreset) {
+                    "list_dash" -> note.lines().joinToString("\n") { "$indent- $it" }
+                    "list_star" -> note.lines().joinToString("\n") { "$indent* $it" }
+                    "numbered" -> note.lines().mapIndexed { idx, line -> "$indent${idx + 1}. $line" }.joinToString("\n")
+                    "checklist" -> note.lines().joinToString("\n") { "$indent- [ ] $it" }
+                    "custom" -> note.lines().joinToString("\n") { indent + customPrepend + it }
+                    else -> if (fallbackListItems) {
+                        note.lines().joinToString("\n") { "$indent- $it" }
+                    } else {
+                        note
                     }
-                } else {
-                    note
                 }
 
                 // Добавляем временную метку перед текстом, если включено
@@ -422,8 +431,26 @@ class NoteDialog(
                     content.append(timestamp).append("\n")
                 }
 
-                // Добавляем отформатированный текст
+                // Добавляем отформатированный текст и суффикс, если задан
                 content.append(formattedNote)
+
+                val appendPreset = settingsViewModel.appendPreset.value
+                val customAppend = settingsViewModel.customAppend.value
+                val appendResolved = when (appendPreset) {
+                    "date" -> {
+                        val dateStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                        " $dateStr"
+                    }
+                    "date_time" -> {
+                        val dtStr = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+                        " $dtStr"
+                    }
+                    "custom" -> customAppend
+                    else -> ""
+                }
+                if (appendResolved.isNotEmpty()) {
+                    content.append(appendResolved)
+                }
 
                 // Открываем файл для записи
                 context.contentResolver.openOutputStream(file.uri, if (isNewFile) "w" else "wa")?.use { outputStream ->

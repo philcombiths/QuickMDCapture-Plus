@@ -65,6 +65,25 @@
     <string name="date_format_hint">Формат даты (заключите шаблоны форматирования даты и времени в двойные фигурные скобки: {{ }})</string>
     <string name="restore_text">Восстановить текст</string>
     <string name="general_settings_title">Общие настройки</string>
+    <!-- Formatting presets -->
+    <string name="formatting_section_title">Форматирование</string>
+    <string name="prepend_preset_label">Префикс (предустановки)</string>
+    <string name="prepend_preset_none">Нет</string>
+    <string name="prepend_preset_list_dash">Элемент списка (-)</string>
+    <string name="prepend_preset_list_star">Элемент списка (*)</string>
+    <string name="prepend_preset_numbered">Нумерованный</string>
+    <string name="prepend_preset_checklist">Чек-лист (- [ ])</string>
+    <string name="prepend_preset_custom">Пользовательский…</string>
+    <string name="custom_prepend_label">Пользовательский префикс</string>
+    <string name="custom_prepend_hint">Текст перед каждой строкой заметки</string>
+
+    <string name="append_preset_label">Суффикс (предустановки)</string>
+    <string name="append_preset_none">Нет</string>
+    <string name="append_preset_date">Дата</string>
+    <string name="append_preset_date_time">Дата и время</string>
+    <string name="append_preset_custom">Пользовательский…</string>
+    <string name="custom_append_label">Пользовательский суффикс</string>
+    <string name="custom_append_hint">Текст после заметки</string>
     <string name="theme_setting">Тема</string>
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Тёмная</string>

@@ -66,6 +66,11 @@ fun SettingsScreen(
     val isNoteTextInFilenameEnabled by settingsViewModel.isNoteTextInFilenameEnabled.collectAsState()
     val noteTextInFilenameLength by settingsViewModel.noteTextInFilenameLength.collectAsState()
     val insertAfterMarker by settingsViewModel.insertAfterMarker.collectAsState("")
+    // Formatting presets
+    val prependPreset by settingsViewModel.prependPreset.collectAsState("none")
+    val appendPreset by settingsViewModel.appendPreset.collectAsState("none")
+    val customPrepend by settingsViewModel.customPrepend.collectAsState("")
+    val customAppend by settingsViewModel.customAppend.collectAsState("")
 
     // Reminder settings state
     val isReminderEnabled by settingsViewModel.isReminderEnabled.collectAsState()
@@ -513,6 +518,165 @@ fun SettingsScreen(
                 thickness = 2.dp,
                 color = if (theme == "dark") Color.LightGray else Color.DarkGray
             )
+
+            // Formatting Section
+            Text(
+                text = stringResource(id = R.string.formatting_section_title),
+                fontWeight = FontWeight.Bold,
+                color = textColor,
+                modifier = Modifier.fillMaxWidth(),
+                fontSize = 18.sp,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Prepend preset dropdown
+            Text(
+                text = stringResource(id = R.string.prepend_preset_label),
+                color = textColor
+            )
+            var prependExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = prependExpanded,
+                onExpandedChange = { prependExpanded = !prependExpanded }
+            ) {
+                // Safely derive label from flow with a non-null default
+                val prependPresetValue = settingsViewModel.prependPreset.collectAsState("none").value ?: "none"
+                val prependLabel = when (prependPresetValue) {
+                    "list_dash" -> stringResource(R.string.prepend_preset_list_dash)
+                    "list_star" -> stringResource(R.string.prepend_preset_list_star)
+                    "numbered" -> stringResource(R.string.prepend_preset_numbered)
+                    "checklist" -> stringResource(R.string.prepend_preset_checklist)
+                    "custom" -> stringResource(R.string.prepend_preset_custom)
+                    else -> stringResource(R.string.prepend_preset_none)
+                }
+                TextField(
+                    value = prependLabel,
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = textColor,
+                        containerColor = Color.Transparent
+                    )
+                )
+                ExposedDropdownMenu(
+                    expanded = prependExpanded,
+                    onDismissRequest = { prependExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.prepend_preset_none)) },
+                        onClick = { settingsViewModel.updatePrependPreset("none"); prependExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.prepend_preset_list_dash)) },
+                        onClick = { settingsViewModel.updatePrependPreset("list_dash"); prependExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.prepend_preset_list_star)) },
+                        onClick = { settingsViewModel.updatePrependPreset("list_star"); prependExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.prepend_preset_numbered)) },
+                        onClick = { settingsViewModel.updatePrependPreset("numbered"); prependExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.prepend_preset_checklist)) },
+                        onClick = { settingsViewModel.updatePrependPreset("checklist"); prependExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.prepend_preset_custom)) },
+                        onClick = { settingsViewModel.updatePrependPreset("custom"); prependExpanded = false }
+                    )
+                }
+            }
+
+            if (prependPreset == "custom") {
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = customPrepend,
+                    onValueChange = { settingsViewModel.updateCustomPrepend(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = textColor,
+                        containerColor = Color.Transparent
+                    ),
+                    label = { Text(stringResource(R.string.custom_prepend_label), color = textColor) },
+                    placeholder = { Text(stringResource(R.string.custom_prepend_hint), color = textColor.copy(alpha = 0.6f)) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Append preset dropdown
+            Text(
+                text = stringResource(id = R.string.append_preset_label),
+                color = textColor
+            )
+            var appendExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = appendExpanded,
+                onExpandedChange = { appendExpanded = !appendExpanded }
+            ) {
+                // Safely derive label from flow with a non-null default
+                val appendPresetValue = settingsViewModel.appendPreset.collectAsState("none").value ?: "none"
+                val appendLabel = when (appendPresetValue) {
+                    "date" -> stringResource(R.string.append_preset_date)
+                    "date_time" -> stringResource(R.string.append_preset_date_time)
+                    "custom" -> stringResource(R.string.append_preset_custom)
+                    else -> stringResource(R.string.append_preset_none)
+                }
+                TextField(
+                    value = appendLabel,
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier
+                        .menuAnchor()
+                        .fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = textColor,
+                        containerColor = Color.Transparent
+                    )
+                )
+                ExposedDropdownMenu(
+                    expanded = appendExpanded,
+                    onDismissRequest = { appendExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.append_preset_none)) },
+                        onClick = { settingsViewModel.updateAppendPreset("none"); appendExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.append_preset_date)) },
+                        onClick = { settingsViewModel.updateAppendPreset("date"); appendExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.append_preset_date_time)) },
+                        onClick = { settingsViewModel.updateAppendPreset("date_time"); appendExpanded = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.append_preset_custom)) },
+                        onClick = { settingsViewModel.updateAppendPreset("custom"); appendExpanded = false }
+                    )
+                }
+            }
+
+            if (appendPreset == "custom") {
+                Spacer(modifier = Modifier.height(8.dp))
+                TextField(
+                    value = customAppend,
+                    onValueChange = { settingsViewModel.updateCustomAppend(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.textFieldColors(
+                        textColor = textColor,
+                        containerColor = Color.Transparent
+                    ),
+                    label = { Text(stringResource(R.string.custom_append_label), color = textColor) },
+                    placeholder = { Text(stringResource(R.string.custom_append_hint), color = textColor.copy(alpha = 0.6f)) }
+                )
+            }
 
             // Save Location Section
             Text(

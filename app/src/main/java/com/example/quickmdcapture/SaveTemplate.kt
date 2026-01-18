@@ -15,5 +15,10 @@ data class SaveTemplate(
     val dateCreatedTemplate: String = "{{yyyy.MM.dd}}T{{HH:mm:ssZ}}",
     val isNoteTextInFilenameEnabled: Boolean = false,
     val noteTextInFilenameLength: Int = 30,
-    val insertAfterMarker: String = ""
+    val insertAfterMarker: String = "",
+    // Formatting presets and custom text
+    val prependPreset: String = "none",    // none | list_dash | list_star | numbered | checklist | custom
+    val appendPreset: String = "none",     // none | date | date_time | custom
+    val customPrepend: String = "",
+    val customAppend: String = ""
 ) 

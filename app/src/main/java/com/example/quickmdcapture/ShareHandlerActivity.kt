@@ -179,15 +179,48 @@ class ShareHandlerActivity : AppCompatActivity() {
         val existingFile = folder.findFile(fileName)
         if (existingFile != null) {
             contentResolver.openOutputStream(existingFile.uri, "wa")?.use { outputStream ->
-                var textToWrite = text
-                if (isListItemsEnabled) {
-                    textToWrite = textToWrite.split("\n").joinToString("\n") { 
-                        "\t".repeat(listItemIndentLevel) + "- $it" 
+                // Apply prepend preset formatting
+                val indent = "\t".repeat(listItemIndentLevel)
+                val prependPreset = settingsViewModel.prependPreset.value
+                val customPrepend = settingsViewModel.customPrepend.value
+                val fallbackListItems = isListItemsEnabled && prependPreset == "none" && customPrepend.isBlank()
+
+                var textToWrite = when (prependPreset) {
+                    "list_dash" -> text.split("\n").joinToString("\n") { "$indent- $it" }
+                    "list_star" -> text.split("\n").joinToString("\n") { "$indent* $it" }
+                    "numbered" -> text.split("\n").mapIndexed { idx, line -> "$indent${idx + 1}. $line" }.joinToString("\n")
+                    "checklist" -> text.split("\n").joinToString("\n") { "$indent- [ ] $it" }
+                    "custom" -> text.split("\n").joinToString("\n") { indent + customPrepend + it }
+                    else -> if (fallbackListItems) {
+                        text.split("\n").joinToString("\n") { "$indent- $it" }
+                    } else {
+                        text
                     }
                 }
+
                 if (isTimestampEnabled) {
                     textToWrite = "${getFormattedTimestamp(timestampTemplate)}\n$textToWrite"
                 }
+
+                // Append preset handling
+                val appendPreset = settingsViewModel.appendPreset.value
+                val customAppend = settingsViewModel.customAppend.value
+                val appendResolved = when (appendPreset) {
+                    "date" -> {
+                        val dateStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                        " $dateStr"
+                    }
+                    "date_time" -> {
+                        val dtStr = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+                        " $dtStr"
+                    }
+                    "custom" -> customAppend
+                    else -> ""
+                }
+                if (appendResolved.isNotEmpty()) {
+                    textToWrite += appendResolved
+                }
+
                 outputStream.write("\n$textToWrite".toByteArray())
             }
             Toast.makeText(this, getString(R.string.note_appended), Toast.LENGTH_SHORT).show()
@@ -195,18 +228,51 @@ class ShareHandlerActivity : AppCompatActivity() {
             val newFile = folder.createFile("text/markdown", fileName)
             if (newFile != null) {
                 contentResolver.openOutputStream(newFile.uri)?.use { outputStream ->
-                    var textToWrite = text
-                    if (isListItemsEnabled) {
-                        textToWrite = textToWrite.split("\n").joinToString("\n") { 
-                            "\t".repeat(listItemIndentLevel) + "- $it" 
+                    // Apply prepend preset formatting
+                    val indent = "\t".repeat(listItemIndentLevel)
+                    val prependPreset = settingsViewModel.prependPreset.value
+                    val customPrepend = settingsViewModel.customPrepend.value
+                    val fallbackListItems = isListItemsEnabled && prependPreset == "none" && customPrepend.isBlank()
+
+                    var textToWrite = when (prependPreset) {
+                        "list_dash" -> text.split("\n").joinToString("\n") { "$indent- $it" }
+                        "list_star" -> text.split("\n").joinToString("\n") { "$indent* $it" }
+                        "numbered" -> text.split("\n").mapIndexed { idx, line -> "$indent${idx + 1}. $line" }.joinToString("\n")
+                        "checklist" -> text.split("\n").joinToString("\n") { "$indent- [ ] $it" }
+                        "custom" -> text.split("\n").joinToString("\n") { indent + customPrepend + it }
+                        else -> if (fallbackListItems) {
+                            text.split("\n").joinToString("\n") { "$indent- $it" }
+                        } else {
+                            text
                         }
                     }
+
                     if (isTimestampEnabled) {
                         textToWrite = "${getFormattedTimestamp(timestampTemplate)}\n$textToWrite"
                     }
                     if (isDateCreatedEnabled) {
                         textToWrite = "---\n$propertyName: $fullTimeStamp\n---\n$textToWrite"
                     }
+
+                    // Append preset handling
+                    val appendPreset = settingsViewModel.appendPreset.value
+                    val customAppend = settingsViewModel.customAppend.value
+                    val appendResolved = when (appendPreset) {
+                        "date" -> {
+                            val dateStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                            " $dateStr"
+                        }
+                        "date_time" -> {
+                            val dtStr = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
+                            " $dtStr"
+                        }
+                        "custom" -> customAppend
+                        else -> ""
+                    }
+                    if (appendResolved.isNotEmpty()) {
+                        textToWrite += appendResolved
+                    }
+
                     outputStream.write(textToWrite.toByteArray())
                 }
                 Toast.makeText(this, getString(R.string.note_saved), Toast.LENGTH_SHORT).show()

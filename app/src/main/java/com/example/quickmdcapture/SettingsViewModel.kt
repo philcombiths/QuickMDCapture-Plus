@@ -106,6 +106,19 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     )
     val insertAfterMarker: StateFlow<String> = _insertAfterMarker
 
+    // Formatting presets
+    private val _prependPreset = MutableStateFlow("none")
+    val prependPreset: StateFlow<String> = _prependPreset
+
+    private val _appendPreset = MutableStateFlow("none")
+    val appendPreset: StateFlow<String> = _appendPreset
+
+    private val _customPrepend = MutableStateFlow("")
+    val customPrepend: StateFlow<String> = _customPrepend
+
+    private val _customAppend = MutableStateFlow("")
+    val customAppend: StateFlow<String> = _customAppend
+
     // Reminder settings
     private val _isReminderEnabled = MutableStateFlow(
         sharedPreferences.getBoolean("REMINDER_ENABLED", false)
@@ -239,6 +252,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             _isNoteTextInFilenameEnabled.value = template.isNoteTextInFilenameEnabled
             _noteTextInFilenameLength.value = template.noteTextInFilenameLength
             _insertAfterMarker.value = template.insertAfterMarker
+            // New formatting presets
+            _prependPreset.value = template.prependPreset ?: "none"
+            _appendPreset.value = template.appendPreset ?: "none"
+            _customPrepend.value = template.customPrepend ?: ""
+            _customAppend.value = template.customAppend ?: ""
         }
     }
 
@@ -510,12 +528,41 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         updateSelectedTemplate()
     }
 
+    // Formatting preset updaters
+    fun updatePrependPreset(value: String) {
+        _prependPreset.value = value
+        sharedPreferences.edit().putString("PREPEND_PRESET", value).apply()
+        updateSelectedTemplate()
+    }
+
+    fun updateAppendPreset(value: String) {
+        _appendPreset.value = value
+        sharedPreferences.edit().putString("APPEND_PRESET", value).apply()
+        updateSelectedTemplate()
+    }
+
+    fun updateCustomPrepend(value: String) {
+        _customPrepend.value = value
+        sharedPreferences.edit().putString("CUSTOM_PREPEND", value).apply()
+        updateSelectedTemplate()
+    }
+
+    fun updateCustomAppend(value: String) {
+        _customAppend.value = value
+        sharedPreferences.edit().putString("CUSTOM_APPEND", value).apply()
+        updateSelectedTemplate()
+    }
+
     private fun updateSelectedTemplate() {
         selectedTemplate?.let { template ->
             updateTemplate(template.copy(
                 isNoteTextInFilenameEnabled = _isNoteTextInFilenameEnabled.value,
                 noteTextInFilenameLength = _noteTextInFilenameLength.value,
-                insertAfterMarker = _insertAfterMarker.value
+                insertAfterMarker = _insertAfterMarker.value,
+                prependPreset = _prependPreset.value,
+                appendPreset = _appendPreset.value,
+                customPrepend = _customPrepend.value,
+                customAppend = _customAppend.value
             ))
         }
     }

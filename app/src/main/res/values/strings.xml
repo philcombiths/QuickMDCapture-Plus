@@ -65,6 +65,25 @@
     <string name="date_format_hint">Date format (put date and time formatting patterns inside double curly braces: {{ }})</string>
     <string name="restore_text">Restore Text</string>
     <string name="general_settings_title">General settings</string>
+    <!-- Formatting presets -->
+    <string name="formatting_section_title">Formatting</string>
+    <string name="prepend_preset_label">Prepend preset</string>
+    <string name="prepend_preset_none">None</string>
+    <string name="prepend_preset_list_dash">List item (-)</string>
+    <string name="prepend_preset_list_star">List item (*)</string>
+    <string name="prepend_preset_numbered">Numbered</string>
+    <string name="prepend_preset_checklist">Checklist item (- [ ])</string>
+    <string name="prepend_preset_custom">Custom…</string>
+    <string name="custom_prepend_label">Custom prepend</string>
+    <string name="custom_prepend_hint">Text to place before each captured note line</string>
+
+    <string name="append_preset_label">Append preset</string>
+    <string name="append_preset_none">None</string>
+    <string name="append_preset_date">Date</string>
+    <string name="append_preset_date_time">Date and time</string>
+    <string name="append_preset_custom">Custom…</string>
+    <string name="custom_append_label">Custom append</string>
+    <string name="custom_append_hint">Text to place after the captured note</string>
     <string name="theme_setting">Theme</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
