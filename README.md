@@ -15,7 +15,7 @@
 
 1. Install [Obtainium](https://github.com/ImranR98/Obtainium/blob/main/README.md#installation)
 2. Add the app by URL:  
-   `https://github.com/Fertion/QuickMDCapture`
+   `https://github.com/philcombiths/QuickMDCapture-Plus`
 
 ---
 
@@ -26,10 +26,10 @@
 - [x] Add notes using simple widgets
 - [x] Distribute the settings into sections, information buttons with clarifications
 - [x] Add notes without unlocking your device
+- [ ] Description/instruction indicates that specifying exisiting not will append to note
 - [ ] Styles for permanent notification
-- [ ] Starting note addition via volume buttons, input is possible without unlocking the phone
+- [ ] Starting note addition via volume buttons or other quick methods, input is possible without unlocking the phone
 - [ ] A widget displaying a list of the last 3-5 added notes; clicking on them opens the selected note via URI in Obsidian
-- [ ] A text input form widget (similar to a regular text form, but fixed on the desktop rather than a pop-up)
 - [ ] A set of templates to allow saving different notes with various properties in different locations.
 - [ ] The ability to specify multiple properties for a date (for example, to create an updated property right away).
 - [ ] Save attachments in a separate folder and add a link to the new file(s) in the note.
@@ -46,7 +46,7 @@ When you tap on it, a dialog box opens for entering your note.
 
 <img src="https://github.com/user-attachments/assets/6688ea07-d264-42a6-82c2-f8b0b7e8e596" width="230"/>
 
-After that, the file is saved in .md format at the path specified in the settings.
+After that, the file is saved in .md format at the path specified in the settings. If the note already exists, the content is appended to the end of the note.
 
 <img src="https://github.com/user-attachments/assets/d09754d5-a94b-43e2-80c6-9d8f68ba55f9" width="230"/>
 
@@ -54,4 +54,5 @@ You can also add notes via widgets on your desktop.
 
 <img src="https://github.com/user-attachments/assets/ca0be0b9-4801-4bdf-a56d-3b93da9b2e7c" width="230"/>
 
-**Important: I am not a programmer, and the code was written by neural networks, so I don't fully understand how it works in detail. Therefore, while I’ve tested the app to the best of my ability, use it at your own risk. I would also greatly appreciate any feedback and advice.**
+This project is a fork of QuickMDCapture, available at [https://github.com/Fertion/QuickMDCapture](https://github.com/Fertion/QuickMDCapture)
+The original project is licensed under the MIT License.
