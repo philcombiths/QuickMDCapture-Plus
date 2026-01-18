@@ -45,6 +45,8 @@ class NoteDialog(
     private val templateSpinner by lazy { findViewById<Spinner>(R.id.templateSpinner) }
     private var lastPartialTextLength = 0
     private val handler = Handler(Looper.getMainLooper())
+    private lateinit var textWatcher: TextWatcher
+    private lateinit var recognitionListener: RecognitionListener
 
     private inner class TemplateAdapter(
         context: Context,
@@ -232,7 +234,7 @@ class NoteDialog(
 
         etNote.setText("")
 
-        etNote.addTextChangedListener(object : TextWatcher {
+        textWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -245,7 +247,8 @@ class NoteDialog(
             }
 
             override fun afterTextChanged(s: Editable?) {}
-        })
+        }
+        etNote.addTextChangedListener(textWatcher)
 
         etNote.requestFocus()
         window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE)
@@ -265,7 +268,7 @@ class NoteDialog(
         }
 
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
-        speechRecognizer.setRecognitionListener(object : RecognitionListener {
+        recognitionListener = object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {}
 
             override fun onBeginningOfSpeech() {
@@ -318,7 +321,8 @@ class NoteDialog(
             }
 
             override fun onEvent(eventType: Int, params: Bundle?) {}
-        })
+        }
+        speechRecognizer.setRecognitionListener(recognitionListener)
 
         btnSpeech.setOnClickListener {
             if (isListening) {
@@ -333,11 +337,19 @@ class NoteDialog(
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        // Remove TextWatcher to prevent memory leaks
+        if (::textWatcher.isInitialized) {
+            etNote.removeTextChangedListener(textWatcher)
+        }
+        // Clear all pending Handler callbacks
+        handler.removeCallbacksAndMessages(null)
+        // Stop and clean up speech recognition
         if (isListening) {
             stopSpeechRecognition()
         }
         if (::speechRecognizer.isInitialized) {
             speechRecognizer.destroy()
+            speechRecognizer.setRecognitionListener(null)
         }
     }
 
