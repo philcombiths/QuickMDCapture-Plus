@@ -39,12 +39,18 @@ class NoteDialog(
     private val speechRecognitionManager by lazy {
         SpeechRecognitionManager(
             context = context,
-            onListeningStateChanged = { updateSpeechButtonIcon() },
+            onListeningStateChanged = { isListening ->
+                isSpeechRecognitionActive = isListening
+                updateSpeechButtonIcon()
+                updateSaveButtonState()
+            },
             onTextUpdated = { text -> updateNoteText(text) },
             onAutoSave = { text ->
                 noteSaver.saveNote(
                     note = text,
                     onSuccess = {
+                        hasAutoSaved = true
+                        updateSaveButtonState()
                         Toast.makeText(context, R.string.note_saved, Toast.LENGTH_SHORT).show()
                         // Allow user to see the captured text briefly before closing
                         handler.postDelayed({ dismiss() }, 2000)
@@ -63,6 +69,10 @@ class NoteDialog(
     private val templateSpinner by lazy { findViewById<Spinner>(R.id.templateSpinner) }
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var textWatcher: TextWatcher
+
+    // State tracking for button enabling
+    private var isSpeechRecognitionActive = false
+    private var hasAutoSaved = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -265,6 +275,9 @@ class NoteDialog(
             }
         }
 
+        // Initialize save button state
+        updateSaveButtonState()
+
         btnCancel.setOnClickListener {
             stopSpeechRecognition()
             dismiss()
@@ -294,6 +307,12 @@ class NoteDialog(
             stopSpeechRecognition()
         }
         speechRecognitionManager.destroy()
+    }
+
+    private fun updateSaveButtonState() {
+        val btnSave = findViewById<Button>(R.id.btnSave)
+        btnSave.isEnabled = !(isAutoSaveEnabled && (isSpeechRecognitionActive || hasAutoSaved))
+        btnSave.text = if (isSpeechRecognitionActive && isAutoSaveEnabled) "Auto-saving..." else "Save"
     }
 
     private fun updateSpeechButtonIcon() {
