@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 import android.text.Editable
@@ -25,9 +24,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModelProvider
-import java.text.SimpleDateFormat
+import com.example.quickmdcapture.TemplateAdapter
+import com.example.quickmdcapture.SpeechRecognitionManager
 import java.util.*
 
 class NoteDialog(
@@ -37,42 +36,32 @@ class NoteDialog(
 ) : Dialog(activity) {
 
     private lateinit var settingsViewModel: SettingsViewModel
-    private lateinit var speechRecognizer: SpeechRecognizer
-    private var isListening = false
+    private val speechRecognitionManager by lazy {
+        SpeechRecognitionManager(
+            context = context,
+            onListeningStateChanged = { updateSpeechButtonIcon() },
+            onTextUpdated = { text -> updateNoteText(text) },
+            onAutoSave = { text ->
+                noteSaver.saveNote(
+                    note = text,
+                    onSuccess = {
+                        Toast.makeText(context, R.string.note_saved, Toast.LENGTH_SHORT).show()
+                        dismiss()
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+        )
+    }
+    private val noteSaver by lazy { NoteSaver(context, settingsViewModel) }
     private val etNote by lazy { findViewById<EditText>(R.id.etNote) }
     private val btnSpeech by lazy { findViewById<ImageButton>(R.id.btnSpeech) }
     private val btnRestore by lazy { findViewById<ImageButton>(R.id.btnRestore) }
     private val templateSpinner by lazy { findViewById<Spinner>(R.id.templateSpinner) }
-    private var lastPartialTextLength = 0
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var textWatcher: TextWatcher
-    private lateinit var recognitionListener: RecognitionListener
-
-    private inner class TemplateAdapter(
-        context: Context,
-        private val items: List<String>,
-        private val textColor: Int
-    ) : ArrayAdapter<String>(context, android.R.layout.simple_spinner_item, items) {
-
-        override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val view = super.getView(position, convertView, parent)
-            (view as TextView).apply {
-                setTextColor(textColor)
-                gravity = android.view.Gravity.CENTER
-            }
-            return view
-        }
-
-        override fun getDropDownView(position: Int, convertView: View?, parent: ViewGroup): View {
-            val view = super.getDropDownView(position, convertView, parent)
-            (view as TextView).apply {
-                setTextColor(textColor)
-                gravity = android.view.Gravity.CENTER
-                setPadding(paddingLeft, 24, paddingRight, 24)
-            }
-            return view
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -256,7 +245,20 @@ class NoteDialog(
         btnSave.setOnClickListener {
             val note = etNote.text.toString()
             if (note.isNotEmpty()) {
-                saveNote(note)
+                noteSaver.saveNote(
+                    note = note,
+                    onSuccess = {
+                        Toast.makeText(
+                            context,
+                            R.string.note_saved,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        dismiss()
+                    },
+                    onError = { error ->
+                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                    }
+                )
             } else {
                 dismissWithMessage(context.getString(R.string.note_error))
             }
@@ -267,65 +269,8 @@ class NoteDialog(
             dismiss()
         }
 
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
-        recognitionListener = object : RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) {}
-
-            override fun onBeginningOfSpeech() {
-                lastPartialTextLength = 0
-                val currentText = etNote.text.toString()
-                if (currentText.isNotEmpty() && currentText.last() != ' ') {
-                    etNote.append(" ")
-                }
-            }
-
-            override fun onRmsChanged(rmsdB: Float) {}
-
-            override fun onBufferReceived(buffer: ByteArray?) {}
-
-            override fun onEndOfSpeech() {}
-
-            override fun onError(error: Int) {
-                isListening = false
-                btnSpeech.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_mic))
-                lastPartialTextLength = 0
-                // Log the error for debugging
-                android.util.Log.e("NoteDialog", "Speech recognition error: $error")
-            }
-
-            override fun onResults(results: Bundle?) {
-                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (matches != null && matches.isNotEmpty()) {
-                    val spokenText = matches[0]
-                    updateNoteText(spokenText)
-                    if (isAutoSaveEnabled) {
-                        handler.postDelayed({
-                            saveNote(etNote.text.toString())
-                        }, 1000)
-                    }
-                }
-
-                isListening = false
-
-                btnSpeech.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_mic))
-                lastPartialTextLength = 0
-            }
-
-            override fun onPartialResults(partialResults: Bundle?) {
-                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (matches != null && matches.isNotEmpty()) {
-                    val spokenText = matches[0]
-                    updateNoteText(spokenText)
-                    lastPartialTextLength = spokenText.length
-                }
-            }
-
-            override fun onEvent(eventType: Int, params: Bundle?) {}
-        }
-        speechRecognizer.setRecognitionListener(recognitionListener)
-
         btnSpeech.setOnClickListener {
-            if (isListening) {
+            if (speechRecognitionManager.isListeningState) {
                 stopSpeechRecognition()
             } else {
                 (activity as? TransparentActivity)?.startSpeechRecognition()
@@ -344,23 +289,23 @@ class NoteDialog(
         // Clear all pending Handler callbacks
         handler.removeCallbacksAndMessages(null)
         // Stop and clean up speech recognition
-        if (isListening) {
+        if (speechRecognitionManager.isListeningState) {
             stopSpeechRecognition()
         }
-        if (::speechRecognizer.isInitialized) {
-            speechRecognizer.destroy()
-            speechRecognizer.setRecognitionListener(null)
+        speechRecognitionManager.destroy()
+    }
+
+    private fun updateSpeechButtonIcon() {
+        val icon = if (speechRecognitionManager.isListeningState) {
+            R.drawable.ic_mic_on
+        } else {
+            R.drawable.ic_mic
         }
+        btnSpeech.setImageDrawable(ContextCompat.getDrawable(context, icon))
     }
 
     private fun updateNoteText(text: String) {
-        val currentText = etNote.text.toString()
-        val newText = if (lastPartialTextLength <= currentText.length) {
-            currentText.substring(0, currentText.length - lastPartialTextLength) + text
-        } else {
-            text
-        }
-        etNote.setText(newText)
+        etNote.setText(text)
         etNote.setSelection(etNote.text.length)
     }
 
@@ -369,169 +314,11 @@ class NoteDialog(
             Toast.makeText(context, context.getString(R.string.speech_recognition_not_available), Toast.LENGTH_SHORT).show()
             return
         }
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        intent.putExtra(
-            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
-        )
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.speech_prompt))
-        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-        speechRecognizer.startListening(intent)
-        isListening = true
-        btnSpeech.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_mic_on))
+        speechRecognitionManager.startListening()
     }
 
     private fun stopSpeechRecognition() {
-        speechRecognizer.stopListening()
-        isListening = false
-        btnSpeech.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_mic))
-        lastPartialTextLength = 0
-    }
-
-    private fun saveNote(note: String) {
-        if (note.isBlank()) {
-            Toast.makeText(context, R.string.note_error, Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val folderUri = settingsViewModel.folderUri.value
-        if (folderUri == context.getString(R.string.folder_not_selected)) {
-            Toast.makeText(context, R.string.folder_not_selected, Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val folder = DocumentFile.fromTreeUri(context, Uri.parse(folderUri))
-        if (folder == null || !folder.exists() || !folder.canWrite()) {
-            Toast.makeText(context, R.string.error_selecting_folder, Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Формируем имя файла
-        var filename = getFileNameWithDate(settingsViewModel.noteDateTemplate.value)
-
-        // Добавляем начало текста заметки в имя файла, если включено
-        if (settingsViewModel.isNoteTextInFilenameEnabled.value) {
-            val noteText = note.take(settingsViewModel.noteTextInFilenameLength.value)
-                .replace(Regex("[<>:\"/\\|?*]"), "_") // Заменяем недопустимые символы
-                .trim()
-            if (noteText.isNotEmpty()) {
-                filename = "$filename - $noteText"
-            }
-        }
-
-        filename = "$filename.md"
-
-        // Проверяем существование файла
-        var file = folder.findFile(filename)
-        val isNewFile = file == null
-
-        if (isNewFile) {
-            file = folder.createFile("text/markdown", filename)
-        }
-
-        if (file != null) {
-            try {
-                val content = StringBuilder()
-
-                // Форматируем текст заметки с учетом пресетов
-                val indent = "\t".repeat(settingsViewModel.listItemIndentLevel.value)
-                val prependPreset = settingsViewModel.prependPreset.value
-                val customPrepend = settingsViewModel.customPrepend.value
-                val fallbackListItems = settingsViewModel.isListItemsEnabled.value && prependPreset == "none" && customPrepend.isBlank()
-
-                val formattedNote = when (prependPreset) {
-                    "list_dash" -> note.lines().joinToString("\n") { "$indent- $it" }
-                    "list_star" -> note.lines().joinToString("\n") { "$indent* $it" }
-                    "numbered" -> note.lines().mapIndexed { idx, line -> "$indent${idx + 1}. $line" }.joinToString("\n")
-                    "checklist" -> note.lines().joinToString("\n") { "$indent- [ ] $it" }
-                    "custom" -> note.lines().joinToString("\n") { indent + customPrepend + it }
-                    else -> if (fallbackListItems) {
-                        note.lines().joinToString("\n") { "$indent- $it" }
-                    } else {
-                        note
-                    }
-                }
-
-                // Добавляем временную метку перед текстом, если включено
-                if (settingsViewModel.isTimestampEnabled.value) {
-                    val timestamp = getFormattedTimestamp(settingsViewModel.timestampTemplate.value)
-                    content.append(timestamp).append("\n")
-                }
-
-                // Добавляем отформатированный текст и суффикс, если задан
-                content.append(formattedNote)
-
-                val appendPreset = settingsViewModel.appendPreset.value
-                val customAppend = settingsViewModel.customAppend.value
-                val appendResolved = when (appendPreset) {
-                    "date" -> {
-                        val dateStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-                        " $dateStr"
-                    }
-                    "date_time" -> {
-                        val dtStr = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
-                        " $dtStr"
-                    }
-                    "custom" -> customAppend
-                    else -> ""
-                }
-                if (appendResolved.isNotEmpty()) {
-                    content.append(appendResolved)
-                }
-
-                // Открываем файл для записи
-                context.contentResolver.openOutputStream(file.uri, if (isNewFile) "w" else "wa")?.use { outputStream ->
-                    if (isNewFile) {
-                        // Для нового файла добавляем YAML заголовок, если включено
-                        if (settingsViewModel.isDateCreatedEnabled.value) {
-                            val fullTimeStamp = getFormattedTimestamp(settingsViewModel.dateCreatedTemplate.value)
-                            val yamlHeader = "---\n${settingsViewModel.propertyName.value}: $fullTimeStamp\n---\n"
-                            outputStream.write(yamlHeader.toByteArray())
-                        }
-                        outputStream.write(content.toString().toByteArray())
-//                    } else {
-//                        // Для существующего файла добавляем перенос строки и новый текст
-//                        outputStream.write("\n".toByteArray())
-//                        outputStream.write(content.toString().toByteArray())
-//                    }
-                        } else {
-                            // Existing file: read → insert after marker → rewrite
-
-                            val existingText = context.contentResolver
-                                .openInputStream(file.uri)
-                                ?.bufferedReader()
-                                ?.readText()
-                                ?: ""
-
-                            val updatedText = insertAfterMarkerOrAppend(
-                                originalText = existingText,
-                                marker = settingsViewModel.insertAfterMarker.value,
-                                newContent = content.toString()
-                            )
-
-                            // Rewrite entire file
-                            context.contentResolver.openOutputStream(file.uri, "w")?.use { rewriteStream ->
-                                rewriteStream.write(updatedText.toByteArray())
-                            }
-                        }
-
-                }
-
-                settingsViewModel.clearCurrentText()
-                settingsViewModel.clearPreviousText()
-                Toast.makeText(
-                    context,
-                    if (isNewFile) R.string.note_saved else R.string.note_appended,
-                    Toast.LENGTH_SHORT
-                ).show()
-                dismiss()
-            } catch (e: Exception) {
-                Toast.makeText(context, R.string.note_error, Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(context, R.string.note_error, Toast.LENGTH_SHORT).show()
-        }
+        speechRecognitionManager.stopListening()
     }
 
     private fun dismissWithMessage(message: String) {
@@ -558,48 +345,5 @@ class NoteDialog(
         } else {
             keyguardManager.isKeyguardSecure
         }
-    }
-
-    private fun getFileNameWithDate(template: String): String {
-        var result = template
-
-        var startIndex = result.indexOf("{{")
-        while (startIndex != -1) {
-            val endIndex = result.indexOf("}}", startIndex + 2)
-            if (endIndex != -1) {
-                val datePart = result.substring(startIndex + 2, endIndex)
-                val formattedDate = SimpleDateFormat(datePart, Locale.getDefault()).format(Date())
-                result = result.replaceRange(startIndex, endIndex + 2, formattedDate)
-                startIndex = result.indexOf("{{", endIndex)
-            } else {
-                startIndex = -1
-            }
-        }
-
-        return result.replace(":", "_")
-    }
-
-    private fun getFormattedTimestamp(template: String): String {
-        val sb = StringBuilder()
-        var i = 0
-        while (i < template.length) {
-            if (template[i] == '{' && i < template.length - 1 && template[i + 1] == '{') {
-                i += 2
-                val endIndex = template.indexOf("}}", i)
-                if (endIndex != -1) {
-                    val datePart = template.substring(i, endIndex)
-                    val formattedDate = SimpleDateFormat(datePart, Locale.getDefault()).format(Date())
-                    sb.append(formattedDate)
-                    i = endIndex + 2
-                } else {
-                    sb.append(template[i])
-                    i++
-                }
-            } else {
-                sb.append(template[i])
-                i++
-            }
-        }
-        return sb.toString()
     }
 }
