@@ -435,11 +435,32 @@ class NoteDialog(
                             outputStream.write(yamlHeader.toByteArray())
                         }
                         outputStream.write(content.toString().toByteArray())
-                    } else {
-                        // Для существующего файла добавляем перенос строки и новый текст
-                        outputStream.write("\n".toByteArray())
-                        outputStream.write(content.toString().toByteArray())
-                    }
+//                    } else {
+//                        // Для существующего файла добавляем перенос строки и новый текст
+//                        outputStream.write("\n".toByteArray())
+//                        outputStream.write(content.toString().toByteArray())
+//                    }
+                        } else {
+                            // Existing file: read → insert after marker → rewrite
+
+                            val existingText = context.contentResolver
+                                .openInputStream(file.uri)
+                                ?.bufferedReader()
+                                ?.readText()
+                                ?: ""
+
+                            val updatedText = insertAfterMarkerOrAppend(
+                                originalText = existingText,
+                                marker = "# Day Planner",
+                                newContent = content.toString()
+                            )
+
+                            // Rewrite entire file
+                            context.contentResolver.openOutputStream(file.uri, "w")?.use { rewriteStream ->
+                                rewriteStream.write(updatedText.toByteArray())
+                            }
+                        }
+
                 }
 
                 settingsViewModel.clearCurrentText()
