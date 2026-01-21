@@ -20,7 +20,6 @@
 ---
 
 # Planned improvements
-
 - [x] Adding voice input
 - [x] Add notes and files using the "Share" option
 - [x] Add notes using simple widgets
@@ -33,6 +32,22 @@
 - [ ] A set of templates to allow saving different notes with various properties in different locations.
 - [ ] The ability to specify multiple properties for a date (for example, to create an updated property right away).
 - [ ] Save attachments in a separate folder and add a link to the new file(s) in the note.
+## For QuickMDCapture Plus
+- [ ] Fix Hardcoded Strings Fix Localization, add Spanish
+- [ ] Remove Unused Code and Dependencies
+    Potential unused imports (e.g., check `FileInsertUtils.kt` usage). No unit/integration tests (directories exist but are empty). Some Gradle dependencies might be over-included (e.g., verify all Compose modules are needed).
+    (run lint for unused code; add basic unit tests for ViewModel logic).
+- [ ] Improve Security and Permissions Handling
+    Permissions are requested reactively but not always validated before use. No explicit handling for revoked permissions during runtime.
+    (add permission checks before sensitive operations like recording).
+- [ ] Optimize UI and Performance
+    Some UI operations (e.g., heavy Compose recompositions in settings) could be optimized. No lazy loading for large lists (though templates are small).
+    (use `remember`/`derivedStateOf` in Compose, profile with Android Studio).
+- [ ] Add Accessibility and Testing Infrastructure
+    (add content descriptions, write Espresso/UI tests).
+- [ ] Improve Documentation and Code Comments
+    Sparse comments in complex logic (e.g., date formatting, file saving). README.md is basic and lacks setup/installation details.
+    (add KDoc comments, update README with screenshots and troubleshooting).
 
 ---
 
